@@ -7,13 +7,13 @@ from sklearn.model_selection import KFold, cross_val_score
 from lifelines.utils import concordance_index
 
 
-def cross_val(model, features: pd.DataFrame, labels: pd.Series) -> list[float]:
+def cross_val(model, features: pd.DataFrame, labels: pd.Series, folds: int=10) -> list[float]:
     '''Reusable helper function to run cross-validation on a model. Takes model,
     Pandas data frame of features and Pandas data series of labels. Returns 
     list of cross-validation fold accuracy scores as percents.'''
 
     # Define the cross-validation strategy
-    cross_validation=KFold(n_splits=7, shuffle=True, random_state=315)
+    cross_validation=KFold(n_splits=folds, shuffle=True, random_state=315)
 
     # Run the cross-validation, collecting the scores
     scores=cross_val_score(
@@ -29,7 +29,7 @@ def cross_val(model, features: pd.DataFrame, labels: pd.Series) -> list[float]:
     print(f'Cross validation RMSE {-scores.mean():.2f} +/- {scores.std():.2f}')
 
     # Return the scores
-    return scores
+    return -np.array(scores)
 
 
 
