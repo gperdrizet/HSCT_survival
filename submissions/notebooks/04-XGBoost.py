@@ -15,15 +15,15 @@ if os.getcwd() == '/kaggle/working':
     submission_file='submission.csv'
 
     # Feature info files
-    feature_types_dict_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/01.1-feature_type_dict.pkl'
-    feature_value_translation_dicts_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/01.1-feature_value_translation_dicts.pkl'
-    nan_placeholders_dict_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/01.1-nan_placeholders_list.pkl'
+    feature_types_dict_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/01.1-feature_type_dict.pkl'
+    feature_value_translation_dicts_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/01.1-feature_value_translation_dicts.pkl'
+    nan_placeholders_dict_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/01.1-nan_placeholders_list.pkl'
 
     # Model files
-    model_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/05.2-XGBoost_tuned.pkl'
-    knn_imputer_numerical_features_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/02.1-KNN_imputer_numerical_features.pkl'
-    knn_imputer_categorical_features_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/02.1-KNN_imputer_categorical_features.pkl'
-    one_hot_encoder_nan_imputed_file='/kaggle/input/hsct-survival-xgboost-regression-model-assets/02.1-multicollinear_one_hot_encoder_nan_imputed.pkl'
+    model_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/05.2-XGBoost_tuned.pkl'
+    knn_imputer_numerical_features_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/02.1-KNN_imputer_numerical_features.pkl'
+    knn_imputer_categorical_features_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/02.1-KNN_imputer_categorical_features.pkl'
+    one_hot_encoder_nan_imputed_file='/kaggle/input/d/gperdrizet/hsct-survival-xgboost-regression-model-assets/02.1-multicollinear_one_hot_encoder_nan_imputed.pkl'
 
 else:
     # Data files
