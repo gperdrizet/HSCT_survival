@@ -109,7 +109,11 @@ def xgb_hyperparameter_search(
     # Make search space combinations
     samples=search_space_samples(**search_space)
 
-    results={}
+    results={
+        'RMSE mean': [],
+        'RMSE standard deviation': [],
+        'Hyperparameters': []
+    }
 
     # Loop on hyperparameter samples
     for hyperparameters in samples:
@@ -117,13 +121,21 @@ def xgb_hyperparameter_search(
         # Cross-validate with the hyperparameters
         scores=xgb_cross_val(
             hyperparameters,
-            training_df
+            training_df,
+            boosting_rounds=1000,
+            early_stopping_rounds=100
         )
 
-        results[np.array(scores).mean()]=hyperparameters
+        results['RMSE mean'].append(np.array(scores).mean())
+        results['RMSE standard deviation'].append(np.array(scores).std())
+        results['Hyperparameters'].append(hyperparameters)
 
     # Get winning hyperparameter set
-    winning_hyperparameters=results[max(results.keys())]
+    results_df=pd.DataFrame.from_dict(results)
+    results_df.sort_values('RMSE mean', inplace=True, ascending=False)
+    results_df.reset_index(inplace=True, drop=True)
+
+    winning_hyperparameters=dict(results_df.iloc[-1]['Hyperparameters'])
     print(f'Winning hyperparameters: {winning_hyperparameters}')
 
     # Train with winning hyperparameters on complete training set
@@ -140,7 +152,7 @@ def xgb_hyperparameter_search(
         verbose_eval=0
     )
 
-    return results, tuned_model
+    return results_df, tuned_model
 
 
 def score_predictions(
@@ -148,7 +160,8 @@ def score_predictions(
     predictions: list,
     labels_df: pd.DataFrame,
     race_group: list,
-    results: dict
+    results: dict,
+    label_type: str='efs_time'
 ) -> dict:
 
     '''Takes predictions, labels and results dictionary. Calculates 
@@ -159,12 +172,12 @@ def score_predictions(
     results['Model'].append(model_description)
 
     # Save the RMSE for later
-    results['RMSE'].append(root_mean_squared_error(labels_df['efs_time'], predictions))
+    results['RMSE'].append(root_mean_squared_error(labels_df[label_type], predictions))
 
     # Save the concordance index for later
     results['C-index'].append(
         concordance_index(
-            labels_df['efs_time'],
+            labels_df[label_type],
             predictions,
             labels_df['efs']
         )
@@ -173,7 +186,7 @@ def score_predictions(
     # Get and save stratified concordance index for later
     results_df=pd.DataFrame({'ID': labels_df.index, 'prediction': predictions})
     results_df['race_group']=race_group
-    results_df['efs_time']=labels_df['efs_time']
+    results_df['efs_time']=labels_df[label_type]
     results_df['efs']=labels_df['efs']
     solution=results_df.drop(['ID', 'prediction'], axis=1)
     submission=results_df.drop(['race_group','efs_time','efs'], axis=1)
