@@ -19,17 +19,17 @@ def prediction_eval_plot(main_title: str, predictions: list, labels: list) -> pl
     axs[0].set_xlabel('Actual')
     axs[0].set_ylabel('Predicted')
 
-    axs[1].set_title('Fit residual as a function of fitted value')
+    axs[1].set_title('Fitted value vs fit residual')
     axs[1].scatter(predictions, labels - predictions, color='black', s=0.2)
     axs[1].set_xlabel('Fitted value')
     axs[1].set_ylabel('Fit residual')
 
-    axs[2].set_title('Normal quantile plot')
+    axs[2].set_title('Normal quantiles vs fit residual quantiles')
     stats.probplot(labels - predictions, plot=axs[2])
     axs[2].get_lines()[0].set_markeredgecolor('black')
     axs[2].get_lines()[0].set_markerfacecolor('black')
     axs[2].set_xlabel('Normal quantiles')
-    axs[2].set_ylabel('Residuals')
+    axs[2].set_ylabel('Residual quantiles')
 
     plt.tight_layout()
     
