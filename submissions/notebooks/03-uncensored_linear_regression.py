@@ -101,4 +101,3 @@ if __name__=='__main__':
     predictions_df=pd.DataFrame.from_dict({'ID': testing_ids, 'prediction': predicted_efs_time.flatten()})
     predictions_df.describe()
     predictions_df.to_csv(submission_file, index=False)
-    
