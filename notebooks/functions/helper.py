@@ -38,7 +38,8 @@ def cross_val(model, features: pd.DataFrame, labels: pd.Series, folds: int=10) -
 
 def xgb_cross_val(
     xgb_params: dict,
-    training_df: pd.DataFrame,
+    features_df: pd.DataFrame,
+    labels: pd.Series,
     folds: int=10,
     boosting_rounds: int=500,
     early_stopping_rounds: int=10
@@ -49,6 +50,9 @@ def xgb_cross_val(
     # Cross-validation splitter
     k_fold=KFold(n_splits=folds, shuffle=True, random_state=42)
 
+    label_type=labels.name
+    training_df=pd.concat([features_df, labels], axis=1)
+
     # Collector for scores
     scores=[]
 
@@ -56,12 +60,12 @@ def xgb_cross_val(
     for _, (training_idx, validation_idx) in enumerate(k_fold.split(training_df)):
 
         # Get the features for this fold
-        training_features=training_df.iloc[training_idx].drop(['efs', 'efs_time'], axis=1)
-        validation_features=training_df.iloc[validation_idx].drop(['efs', 'efs_time'], axis=1)
+        training_features=training_df.iloc[training_idx].drop(label_type, axis=1)
+        validation_features=training_df.iloc[validation_idx].drop(label_type, axis=1)
 
         # Get the labels
-        training_labels=training_df.iloc[training_idx]['efs_time']
-        validation_labels=training_df.iloc[validation_idx]['efs_time']
+        training_labels=training_df.iloc[training_idx][label_type]
+        validation_labels=training_df.iloc[validation_idx][label_type]
 
         # Convert to DMaxtrix for XGBoost training
         dtraining=xgb.DMatrix(training_features, label=training_labels)
@@ -97,7 +101,8 @@ def search_space_samples(**search_space):
 
 def xgb_hyperparameter_search(
         search_space: dict,
-        training_df: pd.DataFrame
+        features_df: pd.DataFrame,
+        labels: pd.Series
 ) -> Tuple:
     
     '''Does hyperparameter grid search on XGBoost mode. Takes dictionary of
@@ -121,7 +126,8 @@ def xgb_hyperparameter_search(
         # Cross-validate with the hyperparameters
         scores=xgb_cross_val(
             hyperparameters,
-            training_df,
+            features_df,
+            labels,
             boosting_rounds=1000,
             early_stopping_rounds=100
         )
@@ -139,9 +145,7 @@ def xgb_hyperparameter_search(
     print(f'Winning hyperparameters: {winning_hyperparameters}')
 
     # Train with winning hyperparameters on complete training set
-    training_features=training_df.drop(['efs', 'efs_time'], axis=1)
-    training_labels=training_df['efs_time']
-    dtraining=xgb.DMatrix(training_features, label=training_labels)
+    dtraining=xgb.DMatrix(features_df, label=labels)
 
     tuned_model=xgb.train(
         winning_hyperparameters,
@@ -178,7 +182,7 @@ def score_predictions(
     results['C-index'].append(
         concordance_index(
             labels_df[label_type],
-            predictions,
+            -predictions,
             labels_df['efs']
         )
     )
