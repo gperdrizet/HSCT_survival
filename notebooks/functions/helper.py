@@ -164,13 +164,23 @@ def score_predictions(
     predictions: list,
     labels_df: pd.DataFrame,
     race_group: list,
-    results: dict,
+    results: dict=None,
     label_type: str='efs_time'
 ) -> dict:
 
     '''Takes predictions, labels and results dictionary. Calculates 
     RMSE, concordance index and stratified concordance index. Returns
     updated results dictionary.'''
+
+    # If preexisting results were not passed in, make an empty results dictionary
+    if results == None:
+        
+        results={
+            'Model': [],
+            'RMSE': [],
+            'C-index': [],
+            'Stratified C-index': []
+        }
 
     # Add model description to results
     results['Model'].append(model_description)
