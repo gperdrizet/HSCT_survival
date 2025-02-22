@@ -1,4 +1,4 @@
-asttokens==3.0.0
+jasttokens==3.0.0
 autograd==1.7.0
 autograd-gamma==0.5.0
 bleach==6.2.0
