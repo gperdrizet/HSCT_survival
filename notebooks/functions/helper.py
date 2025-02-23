@@ -162,10 +162,11 @@ def xgb_hyperparameter_search(
 def score_predictions(
     model_description: str,
     predictions: list,
-    labels_df: pd.DataFrame,
+    labels: list,
+    efs: list,
     race_group: list,
-    results: dict=None,
-    label_type: str='efs_time'
+    ids: list,
+    results: dict=None
 ) -> dict:
 
     '''Takes predictions, labels and results dictionary. Calculates 
@@ -186,22 +187,22 @@ def score_predictions(
     results['Model'].append(model_description)
 
     # Save the RMSE for later
-    results['RMSE'].append(root_mean_squared_error(labels_df[label_type], predictions))
+    results['RMSE'].append(root_mean_squared_error(labels, predictions))
 
     # Save the concordance index for later
     results['C-index'].append(
         concordance_index(
-            labels_df[label_type],
-            -predictions,
-            labels_df['efs']
+            labels,
+            predictions,
+            efs
         )
     )
 
     # Get and save stratified concordance index for later
-    results_df=pd.DataFrame({'ID': labels_df.index, 'prediction': predictions})
+    results_df=pd.DataFrame({'ID': ids, 'prediction': -predictions})
     results_df['race_group']=race_group
-    results_df['efs_time']=labels_df[label_type]
-    results_df['efs']=labels_df['efs']
+    results_df['efs_time']=labels
+    results_df['efs']=efs
     solution=results_df.drop(['ID', 'prediction'], axis=1)
     submission=results_df.drop(['race_group','efs_time','efs'], axis=1)
     results['Stratified C-index'].append(competition_score(solution, submission))
@@ -238,11 +239,16 @@ def competition_score(solution: pd.DataFrame, submission: pd.DataFrame) -> float
         indices = sorted(merged_df_race_dict[race])
         merged_df_race = merged_df.iloc[indices]
 
+        # print(f'{race} labels: {list(merged_df_race[interval_label])[:10]}')
+        # print(f'{race} predictions: {list(merged_df_race[prediction_label])[:10]}')
+
         # Calculate the concordance index
         c_index_race = concordance_index(
                         merged_df_race[interval_label],
                         -merged_df_race[prediction_label],
                         merged_df_race[event_label])
+        
+        # print(f'{race}: C-index: {c_index_race}')
         
         metric_list.append(c_index_race)
         
