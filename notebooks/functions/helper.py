@@ -6,12 +6,12 @@ import pandas.api.types
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import KFold, cross_val_score
-from sklearn.metrics import root_mean_squared_error
+#from sklearn.metrics import root_mean_squared_error
 from lifelines.utils import concordance_index
-from typing import Tuple
+from typing import Tuple, List
 
 
-def cross_val(model, features: pd.DataFrame, labels: pd.Series, folds: int=10) -> list[float]:
+def cross_val(model, features: pd.DataFrame, labels: pd.Series, folds: int=10) -> List[float]:
     '''Reusable helper function to run cross-validation on a model. Takes model,
     Pandas data frame of features and Pandas data series of labels. Returns 
     list of cross-validation fold RMSE scores.'''
@@ -41,8 +41,8 @@ def xgb_cross_val(
     features_df: pd.DataFrame,
     labels: pd.Series,
     folds: int=10,
-    boosting_rounds: int=500,
-    early_stopping_rounds: int=10
+    boosting_rounds: int=1000,
+    early_stopping_rounds: int=100
 ):
     
     '''Cross-validates an XGBoost model.'''
@@ -76,7 +76,7 @@ def xgb_cross_val(
             xgb_params,
             dtraining,
             num_boost_round=boosting_rounds,
-            evals=[(dtraining, 'training'), (dvalidation, 'validation')],
+            evals=[(dvalidation, 'validation')],
             early_stopping_rounds=early_stopping_rounds,
             verbose_eval=0
         )
@@ -115,8 +115,8 @@ def xgb_hyperparameter_search(
     samples=search_space_samples(**search_space)
 
     results={
-        'RMSE mean': [],
-        'RMSE standard deviation': [],
+        'Metric mean': [],
+        'Metric standard deviation': [],
         'Hyperparameters': []
     }
 
@@ -132,31 +132,31 @@ def xgb_hyperparameter_search(
             early_stopping_rounds=100
         )
 
-        results['RMSE mean'].append(np.array(scores).mean())
-        results['RMSE standard deviation'].append(np.array(scores).std())
+        results['Metric mean'].append(np.array(scores).mean())
+        results['Metric standard deviation'].append(np.array(scores).std())
         results['Hyperparameters'].append(hyperparameters)
 
     # Get winning hyperparameter set
     results_df=pd.DataFrame.from_dict(results)
-    results_df.sort_values('RMSE mean', inplace=True, ascending=False)
+    results_df.sort_values('Metric mean', inplace=True, ascending=False)
     results_df.reset_index(inplace=True, drop=True)
 
-    winning_hyperparameters=dict(results_df.iloc[-1]['Hyperparameters'])
-    print(f'Winning hyperparameters: {winning_hyperparameters}')
+    # winning_hyperparameters=dict(results_df.iloc[-1]['Hyperparameters'])
+    #print(f'Winning hyperparameters: {winning_hyperparameters}')
 
     # Train with winning hyperparameters on complete training set
-    dtraining=xgb.DMatrix(features_df, label=labels)
+    # dtraining=xgb.DMatrix(features_df, label=labels)
 
-    tuned_model=xgb.train(
-        winning_hyperparameters,
-        dtraining,
-        num_boost_round=1000,
-        evals=[(dtraining, 'training')],
-        early_stopping_rounds=10,
-        verbose_eval=0
-    )
+    # tuned_model=xgb.train(
+    #     winning_hyperparameters,
+    #     dtraining,
+    #     num_boost_round=1000,
+    #     evals=[(dtraining, 'training')],
+    #     early_stopping_rounds=100,
+    #     verbose_eval=0
+    # )
 
-    return results_df, tuned_model
+    return results_df#, tuned_model
 
 
 def score_predictions(
@@ -253,3 +253,17 @@ def competition_score(solution: pd.DataFrame, submission: pd.DataFrame) -> float
         metric_list.append(c_index_race)
         
     return float(np.mean(metric_list)-np.sqrt(np.var(metric_list)))
+
+
+def root_mean_squared_error(labels, predictions) -> float:
+    '''Calculates root mean squared error of values in two lists.'''
+
+    labels=np.array(labels)
+    predictions=np.array(predictions)
+
+    errors=labels-predictions
+    squared_errors=errors**2
+    mean_squared_errors=squared_errors.sum()/squared_errors.shape[0]
+    rmse=mean_squared_errors**0.5
+
+    return rmse
