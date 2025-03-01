@@ -1,0 +1,4 @@
+,RMSE mean,RMSE standard deviation,Hyperparameters
+0,0.9642145578041814,0.010351760371447504,"{'objective': 'reg:squarederror', 'eval_metric': 'rmse', 'seed': 315, 'learning_rate': 0.005, 'max_depth': 10, 'subsample': 0.5}"
+1,0.9641188212319411,0.010307443209046814,"{'objective': 'reg:squarederror', 'eval_metric': 'rmse', 'seed': 315, 'learning_rate': 0.005, 'max_depth': 6, 'subsample': 0.5}"
+2,0.9627435391500837,0.009835743137698057,"{'objective': 'reg:squarederror', 'eval_metric': 'rmse', 'seed': 315, 'learning_rate': 0.005, 'max_depth': 8, 'subsample': 0.5}"
