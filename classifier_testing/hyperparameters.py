@@ -8,7 +8,7 @@ distributions={
         'p': [1,2,3,4]
     },
     'Radius Neighbors':{
-        'radius':[0.5,0.75,1.0],
+        'radius':[10],
         'weights': ['uniform','distance'],
         'leaf_size': [15,30,60],
         'p': [1,2,3,4]

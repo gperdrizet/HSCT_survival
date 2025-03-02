@@ -2,11 +2,12 @@
 
 import time
 import pickle
+from pathlib import Path
 
 import numpy as np
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
-from sklearn.pipeline import Pipeline
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import RandomizedSearchCV, ShuffleSplit, cross_val_score
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
@@ -36,7 +37,7 @@ def run(input_file:str, output_file:str):
 
     classifiers={
         'Nearest Neighbors':KNeighborsClassifier(),
-        'Radius Neighbors':RadiusNeighborsClassifier(),
+        # 'Radius Neighbors':RadiusNeighborsClassifier(),
         'Linear SVM':SVC(kernel='linear', max_iter=5000),
         'RBF SVM':SVC(kernel='rbf', max_iter=5000),
         'Polynomial SVM':SVC(kernel='poly', max_iter=5000),
@@ -67,39 +68,52 @@ def run(input_file:str, output_file:str):
     splitter=ShuffleSplit(n_splits=16, test_size=0.3)
     results={}
 
+    if Path(output_file).is_file():
+        with open(output_file, 'rb') as results_file:
+            old_results=pickle.load(results_file)
+
     for name, classifier in classifiers.items():
 
         start_time=time.time()
         results[name]={}
-        results[name]['Hyperparameter distributions']=hyperparams.distributions[name]
+        results[name]['Hyperparameters']=hyperparams.distributions[name]
 
-        with open(output_file, 'rb') as results_file:
-            old_results=pickle.load(results_file)
+        old_results={}
+        optimize=True
 
         if name in old_results.keys():
-            if hyperparams.distributions[name]==old_results[name]['Hyperarameter ditributions']:
-                print(f'{name}: skipped')
-                continue
+            if results[name]['Hyperparameters']==old_results[name]['Hyperparameters']:
+                print(f"{name} already optimized: {old_results[name]['Best hyperparameters']}")
+                winning_parameters=old_results[name]['Best hyperparameters']
+                optimize=False
 
-        optimization=RandomizedSearchCV(
-            classifier,
-            hyperparams.distributions[name],
-            cv=splitter,
-            n_iter=16
-        )
+                for key, value in old_results[name]:
+                    results[name][key]=value
 
-        optimization_result=optimization.fit(
-            training_features,
-            training_labels
-        )
+        if optimize is True:
 
-        winning_parameters=optimization_result.best_params_
-        results[name]['Best parameters']=winning_parameters
+            optimization=RandomizedSearchCV(
+                classifier,
+                hyperparams.distributions[name],
+                cv=splitter,
+                n_iter=16
+            )
+
+            optimization_result=optimization.fit(
+                training_features,
+                training_labels
+            )
+
+            winning_parameters=optimization_result.best_params_
+            results[name]['Best hyperparameters']=winning_parameters
 
         classifier.set_params(**winning_parameters)
+        calibrated_classifier=CalibratedClassifierCV(classifier)
+        calibrated_classifier.fit(training_features, training_labels)
+        results[name]['Calibrated classifier']=calibrated_classifier
 
         scores=cross_val_score(
-            classifier,
+            calibrated_classifier,
             training_features,
             training_labels,
             cv=splitter,
@@ -110,8 +124,7 @@ def run(input_file:str, output_file:str):
         score_mean=np.mean(scores)
         score_std=np.std(scores)
 
-        classifier.fit(training_features, training_labels)
-        testing_predictions=classifier.predict(testing_features)
+        testing_predictions=calibrated_classifier.predict(testing_features)
 
         results[name]['Cross validation scores']=scores
         results[name]['Testing predictions']=testing_predictions
