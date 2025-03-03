@@ -14,10 +14,10 @@ from catboost import CatBoostRegressor
 
 models={
     'Nearest Neighbors':KNeighborsRegressor(n_jobs=1),
-    'Linear SVM':SVR(kernel='linear', max_iter=1000),
-    'RBF SVM':SVR(kernel='rbf', max_iter=1000),
-    'Polynomial SVM':SVR(kernel='poly', max_iter=1000),
-    'Gaussian Process':GaussianProcessRegressor(),
+    'Linear SVM':SVR(kernel='linear'),
+    'RBF SVM':SVR(kernel='rbf'),
+    'Polynomial SVM':SVR(kernel='poly'),
+    # 'Gaussian Process':GaussianProcessRegressor(),
     'Decision Tree':DecisionTreeRegressor(),
     'Random Forest':RandomForestRegressor(n_jobs=1),
     'Neural Net':MLPRegressor(max_iter=1000),
@@ -36,12 +36,14 @@ hyperparameters={
     },
     'Linear SVM':{
         'C': [0.5,1.0,2],
-        'epsilon': [0.05,1,2]
+        'epsilon': [0.05,1,2],
+        'max_iter': [10000]
     },
     'RBF SVM':{
         'C': [0.5,1.0,2],
         'epsilon': [0.05,1,2],
         'gamma': ['scale','auto'],
+        'max_iter': [10000]
     },
     'Polynomial SVM':{
         'C': [0.5,1.0,2],
@@ -49,12 +51,13 @@ hyperparameters={
         'gamma': ['scale','auto'],
         'degree': [2,3],
         'coef0': [0.0,0.001,0.01],
+        'max_iter': [10000]
     },
     'Gaussian Process':{
         'n_restarts_optimizer': [0,1,2]
     },
     'Decision Tree':{
-        'criterion': ['squared_error','friedman_mse','absolute_error','poisson'],
+        'criterion': ['squared_error','friedman_mse','absolute_error'],
         'splitter': ['best','random'],
         'max_depth': [5,10,20],
         'max_features': [0.5,0.75,1]

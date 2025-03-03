@@ -16,9 +16,9 @@ from catboost import CatBoostClassifier
 
 models={
     'Nearest Neighbors':KNeighborsClassifier(n_jobs=1),
-    'Linear SVM':SVC(kernel='linear', class_weight='balanced', max_iter=1000),
-    'RBF SVM':SVC(kernel='rbf', class_weight='balanced', max_iter=1000),
-    'Polynomial SVM':SVC(kernel='poly', class_weight='balanced', max_iter=1000),
+    'Linear SVM':SVC(kernel='linear', class_weight='balanced'),
+    'RBF SVM':SVC(kernel='rbf', class_weight='balanced'),
+    'Polynomial SVM':SVC(kernel='poly', class_weight='balanced'),
     #'Gaussian Process':GaussianProcessClassifier(),
     'Decision Tree':DecisionTreeClassifier(class_weight='balanced'),
     'Random Forest':RandomForestClassifier(class_weight='balanced', n_jobs=1),
@@ -40,12 +40,14 @@ hyperparameters={
     },
     'Linear SVM':{
         'C': [0.5,1.0,2],
-        'decision_function_shape': ['ovo','ovr']
+        'decision_function_shape': ['ovo','ovr'],
+        'max_iter': [10000]
     },
     'RBF SVM':{
         'C': [0.5,1.0,2],
         'decision_function_shape': ['ovo','ovr'],
         'gamma': ['scale','auto'],
+        'max_iter': [10000]
     },
     'Polynomial SVM':{
         'C': [0.5,1.0,2],
@@ -53,6 +55,7 @@ hyperparameters={
         'gamma': ['scale','auto'],
         'degree': [2,3,4],
         'coef0': [0.0,0.001,0.01],
+        'max_iter': [10000]
     },
     'Gaussian Process':{
         'n_restarts_optimizer': [0,1,2],

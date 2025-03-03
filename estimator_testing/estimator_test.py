@@ -3,13 +3,16 @@
 import os
 import time
 import pickle
+import warnings
 from pathlib import Path
 
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import GridSearchCV, ShuffleSplit, cross_val_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.exceptions import ConvergenceWarning
 
+warnings.filterwarnings('ignore', category=ConvergenceWarning)
 os.environ['OMP_NUM_THREADS']='2'
 
 def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task:str, cv_splits:int=4):
@@ -73,7 +76,7 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
                 print(f'{name}: hyperparameter space updated, re-running optimization')
 
         else:
-            print(f'\nOptimizing {name}')
+            print(f'Optimizing {name}')
 
         if optimize is True:
 
@@ -91,13 +94,12 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
 
             winning_parameters=optimization_result.best_params_
             results[name]['Best hyperparameters']=winning_parameters
-
-            model.set_params(**winning_parameters)
+            model=model.set_params(**winning_parameters)
 
             if task == 'classification':
                 scoring='accuracy'
                 model=CalibratedClassifierCV(model)
-            
+
             elif task == 'regression':
                 scoring='neg_mean_squared_error'
 
