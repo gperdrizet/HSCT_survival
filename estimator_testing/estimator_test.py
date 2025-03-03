@@ -48,6 +48,9 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
         for name in old_results.keys():
             print(f" {name}: {old_results[name]['Best hyperparameters']}")
 
+    else:
+        old_results={}
+
     print()
 
     splitter=ShuffleSplit(n_splits=cv_splits, test_size=0.3)
@@ -77,7 +80,8 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
             optimization=GridSearchCV(
                 model,
                 hyperparameters[name],
-                cv=splitter
+                cv=splitter,
+                n_jobs=cv_splits
             )
 
             optimization_result=optimization.fit(
