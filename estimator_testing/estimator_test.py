@@ -3,19 +3,24 @@
 import os
 import time
 import pickle
-import warnings
 from pathlib import Path
 
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.model_selection import GridSearchCV, ShuffleSplit, cross_val_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.exceptions import ConvergenceWarning
 
-warnings.filterwarnings('ignore', category=ConvergenceWarning)
 os.environ['OMP_NUM_THREADS']='2'
 
-def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task:str, cv_splits:int=4):
+def run(
+        input_file:str,
+        output_file:str,
+        models:dict,
+        hyperparameters:dict,
+        task:str='classification',
+        scoring:str='accuracy',
+        cv_splits:int=4
+):
     '''Main function to run test of estimators.'''
 
     print()
@@ -33,8 +38,8 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
 
     if task == 'classification':
         training_labels=data_dict['Training labels']['efs']
-    
-    elif task == 'regression':
+
+    else:
         training_labels=np.log(data_dict['Training labels']['efs_time'])
 
     print('Models:')
@@ -44,7 +49,7 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
     print()
 
     if Path(output_file).is_file():
-        print(f'Have old results:')
+        print('Have old results:')
         with open(output_file, 'rb') as results_file:
             old_results=pickle.load(results_file)
 
@@ -69,7 +74,7 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
         if name in list(old_results.keys()):
             if results[name]['Hyperparameters']==old_results[name]['Hyperparameters']:
                 print(f"{name} already optimized: {old_results[name]['Best hyperparameters']}")
-                winning_parameters=old_results[name]['Best hyperparameters']
+                results[name]=old_results[name]['Best hyperparameters']
                 optimize=False
 
             else:
@@ -101,7 +106,7 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
                 model=CalibratedClassifierCV(model)
 
             elif task == 'regression':
-                scoring='neg_mean_squared_error'
+                scoring='neg_root_mean_squared_error'
 
             model.fit(training_features, training_labels)
             results[name]['Model']=model
@@ -123,11 +128,12 @@ def run(input_file:str, output_file:str, models:dict, hyperparameters:dict, task
             results[name]['Cross validation scores']=scores
             results[name]['Testing predictions']=testing_predictions
 
-            with open(output_file, 'wb') as output:
-                pickle.dump(results, output)
-
             runtime=(time.time()-start_time)/60
 
-            print(f'{name} {scoring}: {score_mean*100:.1f}+/{score_std*100:.1f}%, runtime: {runtime:.0f} minutes')
+            print(f'{name} {scoring}: {score_mean*100:.1f}+/'+
+                  f'{score_std*100:.1f}%, runtime: {runtime:.0f} minutes')
+        
+        with open(output_file, 'wb') as output:
+            pickle.dump(results, output)
 
     return

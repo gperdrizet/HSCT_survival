@@ -29,10 +29,10 @@ models={
 
 hyperparameters={
     'Nearest Neighbors':{
-        'n_neighbors': [2,4,8],
+        'n_neighbors': [6,8,10],
         'weights': ['uniform','distance'],
-        'leaf_size': [15,30,60],
-        'p': [1,2,3]
+        'leaf_size': [10,15,20],
+        'p': [1,2]
     },
     'Linear SVM':{
         'C': [0.5,1.0,2],
@@ -40,7 +40,7 @@ hyperparameters={
         'max_iter': [10000]
     },
     'RBF SVM':{
-        'C': [0.5,1.0,2],
+        'C': [0.25,0.5,1.0],
         'epsilon': [0.05,1,2],
         'gamma': ['scale','auto'],
         'max_iter': [10000]
@@ -50,7 +50,7 @@ hyperparameters={
         'epsilon': [0.05,1,2],
         'gamma': ['scale','auto'],
         'degree': [2,3],
-        'coef0': [0.0,0.001,0.01],
+        'coef0': [0.001,0.01,0.1],
         'max_iter': [10000]
     },
     'Gaussian Process':{
@@ -59,24 +59,24 @@ hyperparameters={
     'Decision Tree':{
         'criterion': ['squared_error','friedman_mse','absolute_error'],
         'splitter': ['best','random'],
-        'max_depth': [5,10,20],
-        'max_features': [0.5,0.75,1]
+        'max_depth': [2,5,7],
+        'max_features': [0.6,0.7,0.8]
     },
     'Random Forest':{
-        'n_estimators': [50,100,200],
+        'n_estimators': [100,200,300],
         'criterion': ['squared_error','friedman_mse','absolute_error','poisson'],
         'max_depth': [5,10,20],
-        'max_features': [0.5,0.75,1],
-        'ccp_alpha': [0.0,0.01,0.1]
+        'max_features': [0.4,0.5,0.6],
+        'ccp_alpha': [0.0,0.001,0.01]
     },
     'Neural Net':{
-        'hidden_layer_sizes': [16,32,64,128,256],
+        'hidden_layer_sizes': [8,16,32,64,128],
         'alpha': [0.000025,0.00005,0.0001,0.0002],
         'learning_rate': ['constant', 'invscaling', 'adaptive']
     },
     'AdaBoost':{
-        'n_estimators': [25, 50, 100],
-        'learning_rate': [0.25, 0.5, 1],
+        'n_estimators': [50,100,200],
+        'learning_rate': [0.5,1,2],
         'loss': ['linear', 'square', 'exponential']
     },
     'SGD':{
