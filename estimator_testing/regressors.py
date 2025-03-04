@@ -63,9 +63,9 @@ hyperparameters={
         'max_features': [0.6,0.7,0.8]
     },
     'Random Forest':{
-        'n_estimators': [100,200,300],
+        'n_estimators': [50,100,150],
         'criterion': ['squared_error','friedman_mse','absolute_error','poisson'],
-        'max_depth': [5,10,20],
+        'max_depth': [3,5,7],
         'max_features': [0.4,0.5,0.6],
         'ccp_alpha': [0.0,0.001,0.01]
     },
