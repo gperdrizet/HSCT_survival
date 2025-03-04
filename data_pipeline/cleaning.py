@@ -1,8 +1,9 @@
 '''Function to clean up features and translate levels for encoding.'''
 
 import pickle
+import pandas as pd
 
-def clean(data_df):
+def run(data_df: pd.DataFrame) -> pd.DataFrame:
     '''Main function to do feature cleaning.'''
 
     feature_value_translation_dicts_file='../data/processed/01.1-feature_value_translation_dicts.pkl'
