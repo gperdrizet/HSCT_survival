@@ -15,7 +15,7 @@ def run(
     '''Main function to do data encoding.'''
 
     #######################################################
-    # Asset loading #######################################
+    # ASSET LOADING #######################################
     #######################################################
 
     # Load the feature data type definitions
@@ -34,6 +34,10 @@ def run(
     with open(knn_imputer_file, 'rb') as input_file:
         knn_imputer=pickle.load(input_file)
 
+    #######################################################
+    # FEATURE ENCODING ####################################
+    #######################################################
+
     # Get categorical features
     categorical_df=data_df[feature_types_dict['Nominal'] + feature_types_dict['Ordinal']]
 
@@ -46,6 +50,10 @@ def run(
         columns=feature_types_dict['Nominal'] + feature_types_dict['Ordinal']
     )
 
+    #######################################################
+    # DATA CLEANING #######################################
+    #######################################################
+
     # Clean NANs in the interval features
     imputed_interval_df=impute_numerical_features(
         df=data_df,
@@ -55,6 +63,10 @@ def run(
 
     # Join the data back together
     data_df=pd.concat([encoded_categorical_features_df, imputed_interval_df], axis=1)
+
+    #######################################################
+    # POWER TRANSFORM #####################################
+    #######################################################
 
     # Power transform the features
     transformed_data=power_transformer.transform(data_df)
