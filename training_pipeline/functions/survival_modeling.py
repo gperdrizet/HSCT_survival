@@ -4,7 +4,7 @@ import pickle
 from typing import Tuple
 
 import pandas as pd
-from lifelines import CoxPHFitter
+from lifelines import CoxPHFitter, WeibullAFTFitter
 
 from .. import configuration as config
 
@@ -63,5 +63,33 @@ def coxph_model(data:dict, assets:dict) -> Tuple[dict, dict]:
 
 def waft_model(data:dict, assets:dict) -> Tuple[dict, dict]:
     '''Weibull Accelerated Failure Time survival modeling.'''
+
+    # Combine features and labels
+    training_df=pd.concat([data['features'], data['labels']], axis=1)
+
+    # Fit the model
+    waft_model=WeibullAFTFitter()
+    waft_model.fit(training_df, duration_col='efs_time', event_col='efs')
+    
+    # Select features by p-value
+    feature_pvals=waft_model.summary['p']
+    feature_pvals=feature_pvals.droplevel(0)
+    feature_pvals.drop('Intercept', axis=0, inplace=True)
+    significant_features_df=training_df[feature_pvals[feature_pvals < 0.05].index].copy()
+
+    # Save the significant features list
+    assets['weibullaft_features']=list(significant_features_df.columns)
+
+    # Refit the model with only the significant features
+    significant_features_df['efs']=training_df['efs']
+    significant_features_df['efs_time']=training_df['efs_time']
+    waft_model=WeibullAFTFitter()
+    waft_model.fit(significant_features_df, duration_col='efs_time', event_col='efs')
+
+    # Forecast participant survival
+    survival_functions=waft_model.predict_survival_function(significant_features_df)
+    expectations=waft_model.predict_expectation(significant_features_df)
+    data['features']['weibullaft_survival']=survival_functions.iloc[-1]
+    data['features']['weibullaft_expectation']=expectations
 
     return data, assets
