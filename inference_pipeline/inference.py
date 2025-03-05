@@ -112,7 +112,7 @@ def run(sample_fraction:float=None):
         assets_file=REGRESSOR_ASSETS_FILE
     )
 
-    predictions_df=pd.DataFrame.from_dict({'ID': ids, 'prediction': predictions})
+    predictions_df=pd.DataFrame.from_dict({'ID': ids, 'prediction': -predictions})
 
     dt=time.time()-start_time
     print(f'Inference complete, run time: {dt:.0f} seconds')

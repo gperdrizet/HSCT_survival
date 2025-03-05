@@ -22,9 +22,12 @@ def run() -> list:
     features_df=data['features']
     labels_df=data['labels']
 
+    # Scale the features
     feature_scaler=StandardScaler()
     features_df=feature_scaler.fit_transform(features_df)
 
+    # Stretch the EFS 0 participants' survival times
+    labels_df['efs_time']=labels_df['efs_time']+(abs(labels_df['efs']-1)*10)
     labels_df['efs_time']=np.log(labels_df['efs_time'])
 
 
@@ -32,16 +35,16 @@ def run() -> list:
 
     # Define models
     models={
-        'SGD':SGDRegressor(penalty='elasticnet', max_iter=10000),
+        # 'SGD':SGDRegressor(penalty='elasticnet', max_iter=10000),
         'CatBoost':CatBoostRegressor(thread_count=4, verbose=0),
         'XGBoost':XGBRegressor(n_jobs=4)
     }
 
     # Set hyperparameters
     model_hyperparameters={
-        'SGD': {'alpha': 0.0002, 'l1_ratio': 0.3, 'learning_rate': 'adaptive', 'loss': 'squared_error'},
+        # 'SGD': {'alpha': 0.0002, 'l1_ratio': 0.3, 'learning_rate': 'adaptive', 'loss': 'squared_error'},
         'CatBoost': {'depth': 5, 'model_size_reg': 0.001, 'n_estimators': 200},
-        'XGBoost': {'max_depth': 5, 'n_estimators': 50, 'subsample': 1}
+        'XGBoost': {'max_depth': 5, 'n_estimators': 100, 'subsample': 1}
 
     }
 
@@ -54,7 +57,7 @@ def run() -> list:
 
         bagging_model=BaggingRegressor(
             estimator=model,
-            n_estimators=10,
+            n_estimators=20,
             max_samples=0.8,
             max_features=0.8,
             bootstrap=True,
