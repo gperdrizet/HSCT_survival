@@ -132,8 +132,8 @@ def run(
 
             runtime=(time.time()-start_time)/60
 
-            print(f'{name} {scoring}: {score_mean*100:.1f}+/'+
-                  f'{score_std*100:.1f}%, runtime: {runtime:.0f} minutes')
+            print(f'{name} {scoring}: {score_mean:.3f}+/'+
+                  f'{score_std:.3f}, runtime: {runtime:.0f} minutes')
         
         with open(output_file, 'wb') as output:
             pickle.dump(results, output)
