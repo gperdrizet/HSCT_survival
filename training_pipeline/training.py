@@ -4,7 +4,7 @@ import pickle
 import luigi
 from luigi.format import Nop
 
-import training_pipeline.configuration as config
+import configuration as config
 from training_pipeline.functions import data_cleaning
 from training_pipeline.functions import data_encoding
 from training_pipeline.functions import survival_modeling

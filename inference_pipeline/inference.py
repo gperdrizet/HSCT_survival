@@ -3,32 +3,12 @@ and feature engineering for inference.'''
 
 import time
 import pandas as pd
-from inference_pipeline import cleaning
-from inference_pipeline import encoding
-from inference_pipeline import feature_engineering
-from inference_pipeline import prediction
 
-####################################################
-# Asset file paths #################################
-####################################################
-
-# Data
-INPUT_DATA_FILE='./data/raw/train.csv'
-FEATURE_TYPES_DICT_FILE='./data/processed/01.1-feature_type_dict.pkl'
-FEATURE_LEVEL_DICTS_FILE='./data/processed/01.1-feature_value_translation_dicts.pkl'
-NAN_DICTS_FILE='./data/processed/01.1-nan_placeholders_list.pkl'
-COXPH_FEATURES_FILE='./data/processed/02.1-coxPH_significant_features.pkl'
-WAFT_FEATURES_FILE='./data/processed/02.2-weibullAFT_significant_features.pkl'
-
-# Models
-TARGET_ENCODER_FILE='./models/01.2-continuous_target_encoder.pkl'
-POWER_TRANSFORMER_FILE='./models/01.2-continuous_target_power_transformer.pkl'
-KNN_IMPUTER_FILE='./models/01.2-numerical_imputer.pkl'
-COXPH_MODEL_FILE='./models/02.1-coxPH_model.pkl'
-WAFT_MODEL_FILE='./models/02.2-weibullAFT_model.pkl'
-KLD_MODELS_FILE='./models/02.3-kld_models.pkl'
-EFS_MODEL_FILE='./models/02.4-EFS_classifier_model.pkl'
-MODEL_FILE='./models/03.3-XGBoost_engineered_features_tuned.pkl'
+import configuration as config
+from inference_pipeline.functions import cleaning
+from inference_pipeline.functions import encoding
+from inference_pipeline.functions import feature_engineering
+from inference_pipeline.functions import prediction
 
 
 def run(sample_fraction:float=None):

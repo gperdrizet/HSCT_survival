@@ -2,7 +2,7 @@
 
 import pickle
 import pandas as pd
-from .. import configuration as config
+import configuration as config
 
 def run() -> pd.DataFrame:
     '''Main function to run data cleaning.'''

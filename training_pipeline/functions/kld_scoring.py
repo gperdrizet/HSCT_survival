@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import gaussian_kde
 
-from .. import configuration as config
+import configuration as config
 
 
 def run() -> dict:

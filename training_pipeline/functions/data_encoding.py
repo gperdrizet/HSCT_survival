@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.preprocessing import TargetEncoder
 from sklearn.impute import KNNImputer
 
-from .. import configuration as config
+import configuration as config
 
 def run() -> dict:
     '''Main function to do data encoding.'''
