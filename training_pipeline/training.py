@@ -2,12 +2,12 @@
 
 import pickle
 import luigi
-from pickle import dump
 from luigi.format import Nop
 
+import training_pipeline.configuration as config
 from training_pipeline.functions import data_cleaning
 from training_pipeline.functions import data_encoding
-import training_pipeline.configuration as config
+from training_pipeline.functions import survival_modeling
 
 class DataCleaning(luigi.Task):
 
@@ -33,22 +33,22 @@ class DataEncoding(luigi.Task):
         data=data_encoding.run()
 
         with self.output().open('w') as output_file:
-            dump(data, output_file)
+            pickle.dump(data, output_file)
 
 
-# class SurvivalFeatures(luigi.Task):
+class SurvivalFeatures(luigi.Task):
 
-#     def requires(self):
-#         return DataEncoding()
+    def requires(self):
+        return DataEncoding()
     
-#     def output(self):
-#         return luigi.LocalTarget(config.PERPLEXITY_RATIO_KLD_SCORE_ADDED)
+    def output(self):
+        return luigi.LocalTarget(config.SURVIVAL_FEATURES_RESULTS, format=Nop)
 
-#     def run(self):
-#         data = data_funcs.add_perplexity_ratio_kld_score()
+    def run(self):
+        data=survival_modeling.run()
 
-#         with self.output().open('w') as output_file:
-#             json.dump(data, output_file)
+        with self.output().open('w') as output_file:
+            pickle.dump(data, output_file)
 
 
 # class KLDFeatures(luigi.Task):
@@ -102,7 +102,7 @@ def run():
         [
             DataCleaning(),
             DataEncoding(),
-            # SurvivalFeatures(),
+            SurvivalFeatures(),
             # KLDFeatures(),
             # ClassifierTraining(),
             # RegressorTraining()
