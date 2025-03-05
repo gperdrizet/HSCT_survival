@@ -1,38 +1,35 @@
 '''Encodes data for inference.'''
 
 import pickle
-import pandas as pd
 from typing import Callable
+import pandas as pd
 
 def run(
         data_df:pd.DataFrame,
-        feature_types_dict_file:str,
-        target_encoder_file:str,
-        power_transformer_file:str,
-        knn_imputer_file: str
+        data_cleaning_assets:str,
+        data_encoding_assets:str,
 ) -> pd.DataFrame:
 
     '''Main function to do data encoding.'''
+
 
     #######################################################
     # ASSET LOADING #######################################
     #######################################################
 
-    # Load the feature data type definitions
-    with open(feature_types_dict_file, 'rb') as input_file:
-        feature_types_dict=pickle.load(input_file)
+    # Load feature type definitions
+    with open(data_cleaning_assets, 'rb') as input_file:
+        assets=pickle.load(input_file)
 
-    # Load the target encoder
-    with open(target_encoder_file, 'rb') as input_file:
-        target_encoder=pickle.load(input_file)
+    feature_types_dict=assets['feature_types']
 
-    # Load the power transformer
-    with open(power_transformer_file, 'rb') as input_file:
-        power_transformer=pickle.load(input_file)
+    # Load encoder and transformer models
+    with open(data_encoding_assets, 'rb') as input_file:
+        assets=pickle.load(input_file)
 
-    # Load the KNN imputer
-    with open(knn_imputer_file, 'rb') as input_file:
-        knn_imputer=pickle.load(input_file)
+    target_encoder=assets['target_encoder']
+    knn_imputer=assets['knn_imputer']
+
 
     #######################################################
     # FEATURE ENCODING ####################################
@@ -63,19 +60,6 @@ def run(
 
     # Join the data back together
     data_df=pd.concat([encoded_categorical_features_df, imputed_interval_df], axis=1)
-
-    #######################################################
-    # POWER TRANSFORM #####################################
-    #######################################################
-
-    # Power transform the features
-    transformed_data=power_transformer.transform(data_df)
-
-    # Rebuild the dataframe
-    data_df=pd.DataFrame(
-        transformed_data,
-        columns=data_df.columns
-    )
 
     return data_df
 

@@ -10,6 +10,18 @@ from inference_pipeline.functions import encoding
 from inference_pipeline.functions import feature_engineering
 from inference_pipeline.functions import prediction
 
+INPUT_DATA_FILE='./pipeline_assets/data/train.csv'
+PREDICTION_OUTPUT_FILE='./submissions/predictions/two_stage_ensemble_submission.csv'
+
+# Models and other assets for each pipeline step
+models='./pipeline_assets/models'
+DATA_CLEANING_ASSETS=f'{models}/01-data_cleaning.pkl'
+DATA_ENCODING_ASSETS=f'{models}/02-data_encoding.pkl'
+SURVIVAL_MODEL_ASSETS=f'{models}/03-survival.pkl'
+KLD_MODEL_ASSETS=f'{models}/04-kullback-leibler_divergence.pkl'
+CLASSIFIER_MODEL_FILE=f'{models}/05-EFS_classifier.pkl'
+REGRESSOR_ASSETS_FILE=f'{models}/06-regressor.pkl'
+
 
 def run(sample_fraction:float=None):
     '''Main function to run inference pipeline.'''
@@ -21,7 +33,7 @@ def run(sample_fraction:float=None):
     print()
 
     # Read the data
-    data_df=pd.read_csv(INPUT_DATA_FILE)
+    data_df=pd.read_csv(config.INPUT_DATA_FILE)
 
     # Save the id column for later
     ids=data_df['ID']
@@ -45,8 +57,7 @@ def run(sample_fraction:float=None):
 
     data_df=cleaning.run(
         data_df=data_df,
-        feature_level_dicts_file=FEATURE_LEVEL_DICTS_FILE,
-        nan_dicts_file=NAN_DICTS_FILE
+        data_cleaning_assets=DATA_CLEANING_ASSETS
     )
 
     dt=time.time()-start_time
@@ -62,10 +73,8 @@ def run(sample_fraction:float=None):
 
     data_df=encoding.run(
         data_df=data_df,
-        feature_types_dict_file=FEATURE_TYPES_DICT_FILE,
-        target_encoder_file=TARGET_ENCODER_FILE,
-        power_transformer_file=POWER_TRANSFORMER_FILE,
-        knn_imputer_file=KNN_IMPUTER_FILE
+        data_cleaning_assets=DATA_CLEANING_ASSETS,
+        data_encoding_assets=DATA_ENCODING_ASSETS
     )
 
     dt=time.time()-start_time
@@ -81,12 +90,9 @@ def run(sample_fraction:float=None):
 
     data_df=feature_engineering.run(
         data_df=data_df,
-        coxph_features_file=COXPH_FEATURES_FILE,
-        waft_features_file=WAFT_FEATURES_FILE,
-        coxph_model_file=COXPH_MODEL_FILE,
-        waft_model_file=WAFT_MODEL_FILE,
-        kld_models_file=KLD_MODELS_FILE,
-        efs_model_file=EFS_MODEL_FILE
+        survival_model_assets=SURVIVAL_MODEL_ASSETS,
+        kld_model_assets=KLD_MODEL_ASSETS,
+        classifier_model_file=CLASSIFIER_MODEL_FILE
     )
 
     dt=time.time()-start_time
@@ -103,7 +109,7 @@ def run(sample_fraction:float=None):
 
     predictions=prediction.run(
         data_df=data_df,
-        model_file=MODEL_FILE
+        assets_file=REGRESSOR_ASSETS_FILE
     )
 
     predictions_df=pd.DataFrame.from_dict({'ID': ids, 'prediction': predictions})
@@ -113,3 +119,5 @@ def run(sample_fraction:float=None):
     print()
     print('Predictions:')
     print(predictions_df.head(20))
+
+    predictions_df.to_csv(PREDICTION_OUTPUT_FILE, index=False)

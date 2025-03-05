@@ -5,21 +5,17 @@ import pandas as pd
 
 def run(
         data_df:pd.DataFrame,
-        feature_level_dicts_file:str,
-        nan_dicts_file:str
+        data_cleaning_assets:str
 ) -> pd.DataFrame:
 
     '''Main function to do feature cleaning.'''
 
-    with open(feature_level_dicts_file, 'rb') as input_file:
-        feature_value_translation_dicts=pickle.load(input_file)
+    with open(data_cleaning_assets, 'rb') as input_file:
+        assets=pickle.load(input_file)
 
-    for feature, translation_dict in feature_value_translation_dicts.items():
+    for feature, translation_dict in assets['feature_levels'].items():
         data_df[feature]=data_df[feature].replace(translation_dict)
 
-    with open(nan_dicts_file, 'rb') as input_file:
-        missing_values=pickle.load(input_file)
-
-    data_df.replace(missing_values, inplace=True)
+    data_df.replace(assets['nan_placeholders'], inplace=True)
 
     return data_df

@@ -2,6 +2,8 @@
 
 import pickle
 
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import BaggingRegressor, VotingRegressor
 from sklearn.linear_model import SGDRegressor
 from catboost import CatBoostRegressor
@@ -13,12 +15,20 @@ def run() -> list:
     '''Main function to do model training.'''
 
     # Load data
-    with open(config.KLD_FEATURES_RESULT, 'rb') as input_file:
+    with open(config.EFS_FEATURE_RESULT, 'rb') as input_file:
         data=pickle.load(input_file)
 
     # Extract features and labels
     features_df=data['features']
     labels_df=data['labels']
+
+    feature_scaler=StandardScaler()
+    features_df=feature_scaler.fit_transform(features_df)
+
+    labels_df['efs_time']=np.log(labels_df['efs_time'])
+
+
+    print(f"EFS times: {labels_df['efs_time']}")
 
     # Define models
     models={
@@ -67,9 +77,15 @@ def run() -> list:
 
         # Make predictions
         predictions=ensemble_model.predict(features_df)
+        print(f'Predictions: {predictions}')
 
-        # Save the voting ensemble model
+        # Save the voting ensemble model and scaler
+        assets={
+            'scaler':feature_scaler,
+            'model':ensemble_model
+        }
+
         with open(config.REGRESSOR_MODEL_ASSETS, 'wb') as output_file:
-            pickle.dump(ensemble_model, output_file)
+            pickle.dump(assets, output_file)
 
         return predictions

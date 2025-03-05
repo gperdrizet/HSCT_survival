@@ -2,24 +2,23 @@
 
 import pickle
 import pandas as pd
-from xgboost import DMatrix
 
 
-def run(data_df:pd.DataFrame, model_file:str) -> pd.DataFrame:
+def run(data_df:pd.DataFrame, assets_file:str) -> list:
     '''Main inference function.'''
 
-    #######################################################
-    # ASSET LOADING #######################################
-    #######################################################
+    # Load model
+    with open(assets_file, 'rb') as input_file:
+        assets=pickle.load(input_file)
 
-    with open(model_file, 'rb') as input_file:
-        model=pickle.load(input_file)
+    # Unpack the assets
+    scaler=assets['scaler']
+    model=assets['model']
 
-    #######################################################
-    # PREDICTION ##########################################
-    #######################################################
+    # Scale the data
+    data_df=scaler.transform(data_df)
 
-    dfeatures=DMatrix(data_df)
-    predictions=model.predict(dfeatures)
+    # Make predictions
+    predictions=model.predict(data_df)
 
     return predictions

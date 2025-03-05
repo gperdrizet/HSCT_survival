@@ -9,22 +9,18 @@
 '''
 
 import pickle
-from typing import Callable
 import multiprocessing as mp
+from typing import Callable
 
 import numpy as np
 import pandas as pd
-from xgboost import DMatrix
 
 
 def run(
         data_df:pd.DataFrame,
-        coxph_features_file:str,
-        waft_features_file:str,
-        coxph_model_file:str,
-        waft_model_file:str,
-        kld_models_file:str,
-        efs_model_file:str
+        survival_model_assets:str,
+        kld_model_assets:str,
+        classifier_model_file:str
 ) -> pd.DataFrame:
 
     '''Main function to run feature engineering operations.'''
@@ -33,23 +29,19 @@ def run(
     # ASSET LOADING #######################################
     #######################################################
 
-    with open(coxph_features_file, 'rb') as input_file:
-        coxph_features=pickle.load(input_file)
+    with open(survival_model_assets, 'rb') as input_file:
+        assets=pickle.load(input_file)
 
-    with open(waft_features_file, 'rb') as input_file:
-        waft_features=pickle.load(input_file)
+    coxph_features=assets['coxph_features']
+    waft_features=assets['weibullaft_features']
+    coxph_model=assets['coxph_model']
+    waft_model=assets['weibullaft_model']
 
-    with open(coxph_model_file, 'rb') as input_file:
-        coxph_model=pickle.load(input_file)
-
-    with open(waft_model_file, 'rb') as input_file:
-        waft_model=pickle.load(input_file)
-
-    with open(kld_models_file, 'rb') as input_file:
+    with open(kld_model_assets, 'rb') as input_file:
         kld_models=pickle.load(input_file)
 
-    with open(efs_model_file, 'rb') as input_file:
-        efs_model=pickle.load(input_file)
+    with open(classifier_model_file, 'rb') as input_file:
+        classifier_model=pickle.load(input_file)
 
     #######################################################
     # FEATURE ENGINEERING #################################
@@ -80,7 +72,7 @@ def run(
 
     data_df=learned_efs(
         data_df=data_df,
-        efs_model=efs_model
+        classifier_model=classifier_model
     )
 
     print(f' Learned EFS probability added, nan count: {data_df.isnull().sum().sum()}')
@@ -99,8 +91,8 @@ def cox_ph(
 
     survival_functions=coxph_model.predict_survival_function(data_df[coxph_features])
     partial_hazards=coxph_model.predict_partial_hazard(data_df[coxph_features])
-    data_df['CoxPH survival']=survival_functions.iloc[-1]
-    data_df['CoxPH partial hazard']=partial_hazards
+    data_df['coxph_survival']=survival_functions.iloc[-1]
+    data_df['coxph_partial_hazard']=partial_hazards
 
     return data_df
 
@@ -115,8 +107,8 @@ def weibull_aft(
 
     survival_functions=waft_model.predict_survival_function(data_df[waft_features])
     expectations=waft_model.predict_expectation(data_df[waft_features])
-    data_df['WeibullAFT survival']=survival_functions.iloc[-1]
-    data_df['WeibullAFT expectation']=expectations
+    data_df['weibullaft_survival']=survival_functions.iloc[-1]
+    data_df['weibullaft_expectation']=expectations
 
     return data_df
 
@@ -136,20 +128,18 @@ def kullback_leibler_score(
         with mp.Pool(workers) as p:
             kld_score=np.concatenate(p.map(kernel_density_estimate, np.array_split(data, workers)))
 
-        data_df[f'{feature} KLD']=kld_score
+        data_df[f'{feature}_kld']=kld_score
 
     return data_df
 
 
 def learned_efs(
         data_df:pd.DataFrame,
-        efs_model:Callable
+        classifier_model:Callable
 ) -> pd.DataFrame:
 
     '''Adds learned EFS probability feature.'''
 
-    dfeatures=DMatrix(data_df)
-
-    data_df['learned_efs']=efs_model.predict(dfeatures)
+    data_df['learned_efs']=classifier_model.predict_proba(data_df)[:,1]
 
     return data_df
