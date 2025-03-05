@@ -1,6 +1,7 @@
 '''Data preprocessing and inference pipeline. Handles data cleaning and encoding
 and feature engineering for inference. Makes predictions.'''
 
+import os
 import time
 import pickle
 import multiprocessing as mp
@@ -9,18 +10,44 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 
-INPUT_DATA_FILE='./pipeline_assets/data/train.csv'
-PREDICTION_OUTPUT_FILE='./submissions/predictions/two_stage_ensemble_submission.csv'
+#######################################################
+# ASSET PATHS #########################################
+#######################################################
 
-# Models and other assets for each pipeline step
-models='./pipeline_assets/models'
-DATA_CLEANING_ASSETS=f'{models}/01-data_cleaning.pkl'
-DATA_ENCODING_ASSETS=f'{models}/02-data_encoding.pkl'
-SURVIVAL_MODEL_ASSETS=f'{models}/03-survival.pkl'
-KLD_MODEL_ASSETS=f'{models}/04-kullback-leibler_divergence.pkl'
-CLASSIFIER_MODEL_FILE=f'{models}/05-EFS_classifier.pkl'
-REGRESSOR_ASSETS_FILE=f'{models}/06-regressor.pkl'
+# Figure out if we are in a Kaggle notebook or not based on the current path and set file paths accordingly
+if os.getcwd() == '/kaggle/working':
 
+    print('Running on Kaggle')
+
+    INPUT_DATA_FILE='/kaggle/input/equity-post-HCT-survival-predictions/test.csv'
+    PREDICTION_OUTPUT_FILE='submission.csv'
+
+    # Models and other assets for each pipeline step
+    dataset_path='/kaggle/input/hsct-survival-two-stage-ensemble-model-assets'
+    DATA_CLEANING_ASSETS=f'{dataset_path}/01-data_cleaning.pkl'
+    DATA_ENCODING_ASSETS=f'{dataset_path}/02-data_encoding.pkl'
+    SURVIVAL_MODEL_ASSETS=f'{dataset_path}/03-survival.pkl'
+    KLD_MODEL_ASSETS=f'{dataset_path}/04-kullback-leibler_divergence.pkl'
+    CLASSIFIER_MODEL_FILE=f'{dataset_path}/05-EFS_classifier.pkl'
+    REGRESSOR_ASSETS_FILE=f'{dataset_path}/06-regressor.pkl'
+
+else:
+    INPUT_DATA_FILE='../../pipeline_assets/data/train.csv'
+    PREDICTION_OUTPUT_FILE='../predictions/two_stage_ensemble_submission.csv'
+
+    # Models and other assets for each pipeline step
+    models='../../pipeline_assets/models'
+    DATA_CLEANING_ASSETS=f'{models}/01-data_cleaning.pkl'
+    DATA_ENCODING_ASSETS=f'{models}/02-data_encoding.pkl'
+    SURVIVAL_MODEL_ASSETS=f'{models}/03-survival.pkl'
+    KLD_MODEL_ASSETS=f'{models}/04-kullback-leibler_divergence.pkl'
+    CLASSIFIER_MODEL_FILE=f'{models}/05-EFS_classifier.pkl'
+    REGRESSOR_ASSETS_FILE=f'{models}/06-regressor.pkl'
+
+
+#######################################################
+# FUNCTIONS ###########################################
+#######################################################
 
 def clean_data(
         data_df:pd.DataFrame,
@@ -100,39 +127,6 @@ def encode_data(
     return data_df
 
 
-def impute_numerical_features(
-        df:pd.DataFrame,
-        features:list,
-        knn_imputer:Callable
-) -> pd.DataFrame:
-
-    '''Takes a set of numerical features, fills NAN with KNN imputation, returns clean features
-    as Pandas dataframe.'''
-
-    # Select all of the numeric columns for input into imputation
-    numerical_df=df.select_dtypes(include='number').copy()
-
-    # Impute missing values
-    imputed_data=knn_imputer.transform(numerical_df)
-
-    # Re-build dataframe
-    imputed_df=pd.DataFrame(
-        imputed_data,
-        columns=numerical_df.columns
-    )
-
-    # Select only the target features
-    imputed_df=imputed_df[features].copy()
-
-    # Fix the index
-    imputed_df.set_index(df.index, inplace=True)
-
-    # Set the types
-    imputed_df=imputed_df.astype('float64').copy()
-
-    return imputed_df
-
-
 def engineer_features(
         data_df:pd.DataFrame,
         survival_model_assets:str,
@@ -198,6 +192,67 @@ def engineer_features(
     return data_df
 
 
+#######################################################
+# PREDICTION ##########################################
+#######################################################
+
+def predict(data_df:pd.DataFrame, assets_file:str) -> list:
+    '''Main inference function.'''
+
+    # Load model
+    with open(assets_file, 'rb') as input_file:
+        assets=pickle.load(input_file)
+
+    # Unpack the assets
+    scaler=assets['scaler']
+    model=assets['model']
+
+    # Scale the data
+    data_df=scaler.transform(data_df)
+
+    # Make predictions
+    predictions=model.predict(data_df)
+
+    return predictions
+
+
+#######################################################
+# OTHER HELPER FUNCTIONS ##############################
+#######################################################
+
+def impute_numerical_features(
+        df:pd.DataFrame,
+        features:list,
+        knn_imputer:Callable
+) -> pd.DataFrame:
+
+    '''Takes a set of numerical features, fills NAN with KNN imputation, returns clean features
+    as Pandas dataframe.'''
+
+    # Select all of the numeric columns for input into imputation
+    numerical_df=df.select_dtypes(include='number').copy()
+
+    # Impute missing values
+    imputed_data=knn_imputer.transform(numerical_df)
+
+    # Re-build dataframe
+    imputed_df=pd.DataFrame(
+        imputed_data,
+        columns=numerical_df.columns
+    )
+
+    # Select only the target features
+    imputed_df=imputed_df[features].copy()
+
+    # Fix the index
+    imputed_df.set_index(df.index, inplace=True)
+
+    # Set the types
+    imputed_df=imputed_df.astype('float64').copy()
+
+    return imputed_df
+
+
 def cox_ph(
         data_df:pd.DataFrame,
         coxph_features:list,
@@ -261,26 +316,9 @@ def learned_efs(
 
     return data_df
 
-
-def predict(data_df:pd.DataFrame, assets_file:str) -> list:
-    '''Main inference function.'''
-
-    # Load model
-    with open(assets_file, 'rb') as input_file:
-        assets=pickle.load(input_file)
-
-    # Unpack the assets
-    scaler=assets['scaler']
-    model=assets['model']
-
-    # Scale the data
-    data_df=scaler.transform(data_df)
-
-    # Make predictions
-    predictions=model.predict(data_df)
-
-    return predictions
-
+#######################################################
+# MAIN INFERENCE PIPELINE #############################
+#######################################################
 
 if __name__ == '__main__':
 
