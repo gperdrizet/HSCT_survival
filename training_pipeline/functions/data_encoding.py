@@ -1,7 +1,7 @@
 '''Functions to encode and transform data for feature engineering.'''
 
 import pickle
-from typing import Callable
+from typing import Tuple, Callable
 
 import pandas as pd
 from sklearn.preprocessing import TargetEncoder
@@ -42,8 +42,8 @@ def run() -> dict:
     )
 
     # Clean NANs in the interval features with imputation
-    interval_df=impute_numerical_features(
-        df=data_df,
+    interval_df, knn_imputer=impute_numerical_features(
+        df=features_df,
         features=feature_types_dict['Interval'],
         knn_imputer=KNNImputer(n_neighbors=5, weights='distance')
     )
@@ -57,6 +57,17 @@ def run() -> dict:
         'labels': labels_df
     }
 
+    print(data['features'].head(len(data['features'])).transpose())
+
+    # Save the fit encoders and transformers
+    assets={
+        'target_encoder':target_encoder,
+        'knn_imputer':knn_imputer,
+    }
+
+    with open(config.DATA_ENCODING_ASSETS, 'wb') as output_file:
+        pickle.dump(assets, output_file)
+
     return data
 
 
@@ -64,7 +75,7 @@ def impute_numerical_features(
         df:pd.DataFrame,
         features:list,
         knn_imputer:Callable
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, Callable]:
 
     '''Takes a set of numerical features, fills NAN with KNN imputation, returns clean features
     as Pandas dataframe.'''
@@ -90,4 +101,4 @@ def impute_numerical_features(
     # Set the types
     imputed_df=imputed_df.astype('float64').copy()
 
-    return imputed_df
+    return imputed_df, knn_imputer

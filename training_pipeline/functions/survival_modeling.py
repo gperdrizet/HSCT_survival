@@ -88,6 +88,9 @@ def waft_model(data:dict, assets:dict) -> Tuple[dict, dict]:
     waft_model=WeibullAFTFitter()
     waft_model.fit(significant_features_df, duration_col='efs_time', event_col='efs')
 
+    # Save the model
+    assets['weibullaft_model']=waft_model
+
     # Forecast participant survival
     survival_functions=waft_model.predict_survival_function(significant_features_df)
     expectations=waft_model.predict_expectation(significant_features_df)

@@ -50,13 +50,19 @@ def run() -> dict:
     # Score the features in the original data and add the result as new features
     for feature in features:
 
-        data=np.array(training_df[feature])
-        workers=mp.cpu_count() - 10
+        print(f'Scoring feature: {feature}')
+
+        feature_data=np.array(training_df[feature])
+        workers=mp.cpu_count() - 1
 
         with mp.Pool(workers) as p:
-            kld_score=np.concatenate(p.map(kld_kdes[feature], np.array_split(data, workers)))
+            kld_score=np.concatenate(p.map(kld_kdes[feature], np.array_split(feature_data, workers)))
 
         data['features'][f'{feature}_kld']=kld_score
+
+    # Save the KLD KDEs
+    with open(config.KLD_MODEL_ASSETS, 'wb') as output_file:
+        pickle.dump(kld_kdes, output_file)
 
     return data
 

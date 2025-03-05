@@ -9,6 +9,8 @@ from training_pipeline.functions import data_cleaning
 from training_pipeline.functions import data_encoding
 from training_pipeline.functions import survival_modeling
 from training_pipeline.functions import kld_scoring
+from training_pipeline.functions import classifier
+from training_pipeline.functions import regressor
 
 class DataCleaning(luigi.Task):
 
@@ -67,34 +69,35 @@ class KLDFeatures(luigi.Task):
             pickle.dump(data, output_file)
 
 
-# class ClassifierTraining(luigi.Task):
+class ClassifierTraining(luigi.Task):
 
-#     def requires(self):
-#         return KLDFeatures()
+    def requires(self):
+        return KLDFeatures()
     
-#     def output(self):
-#         return luigi.LocalTarget(config.TFIDF_SCORE_ADDED)
+    def output(self):
+        return luigi.LocalTarget(config.EFS_FEATURE_RESULT, format=Nop)
 
-#     def run(self):
-#         data = data_funcs.add_tfidf_score()
+    def run(self):
+        data=classifier.run()
 
-#         with self.output().open('w') as output_file:
-#             json.dump(data, output_file)
+        with self.output().open('w') as output_file:
+            pickle.dump(data, output_file)
 
 
-# class RegressorTraining(luigi.Task):
+class RegressorTraining(luigi.Task):
 
-#     def requires(self):
-#         return ClassifierTraining()
+    def requires(self):
+        return ClassifierTraining()
     
-#     def output(self):
-#         return luigi.LocalTarget(config.TFIDF_SCORE_KLD_KDE, format = Nop)
+    def output(self):
+        return luigi.LocalTarget(config.PREDICTIONS, format=Nop)
     
-#     def run(self):
-#         kl_kde = data_funcs.tfidf_score_kld_kde()
+    def run(self):
+        data=regressor.run()
 
-#         with self.output().open('w') as output_file:
-#             dump(kl_kde, output_file, protocol = 5)
+        with self.output().open('w') as output_file:
+            pickle.dump(data, output_file)
+
 
 def run():
     '''Main function to run Luigi training pipeline.'''
@@ -105,8 +108,8 @@ def run():
             DataEncoding(),
             SurvivalFeatures(),
             KLDFeatures(),
-            # ClassifierTraining(),
-            # RegressorTraining()
+            ClassifierTraining(),
+            RegressorTraining()
         ],
         local_scheduler=True
     )
