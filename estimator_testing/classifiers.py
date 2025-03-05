@@ -21,7 +21,7 @@ models={
     'Polynomial SVM':SVC(kernel='poly', class_weight='balanced'),
     #'Gaussian Process':GaussianProcessClassifier(),
     'Decision Tree':DecisionTreeClassifier(class_weight='balanced'),
-    'Random Forest':RandomForestClassifier(class_weight='balanced', n_jobs=1),
+    'Random Forest':RandomForestClassifier(class_weight='balanced', n_jobs=2),
     'Neural Net':MLPClassifier(max_iter=5000),
     'AdaBoost':AdaBoostClassifier(),
     'Naive Bayes':GaussianNB(),
@@ -68,7 +68,7 @@ hyperparameters={
         'max_features': [0.6,0.7,0.8]
     },
     'Random Forest':{
-        'n_estimators': [100,200,300],
+        'n_estimators': [5,10,20],
         'criterion': ['gini','entropy','log_loss'],
         'max_features': [0.4,0.5,0.6],
         'ccp_alpha': [0.0,0.001,0.01]

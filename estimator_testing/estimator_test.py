@@ -49,7 +49,9 @@ def run(
     print()
 
     if Path(output_file).is_file():
+
         print('Have old results:')
+        
         with open(output_file, 'rb') as results_file:
             old_results=pickle.load(results_file)
 

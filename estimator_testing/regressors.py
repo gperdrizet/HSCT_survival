@@ -19,7 +19,7 @@ models={
     'Polynomial SVM':SVR(kernel='poly'),
     # 'Gaussian Process':GaussianProcessRegressor(),
     'Decision Tree':DecisionTreeRegressor(),
-    'Random Forest':RandomForestRegressor(n_jobs=1),
+    'Random Forest':RandomForestRegressor(n_jobs=2),
     'Neural Net':MLPRegressor(max_iter=1000),
     'AdaBoost':AdaBoostRegressor(),
     'SGD': SGDRegressor(penalty='elasticnet'),
@@ -63,8 +63,8 @@ hyperparameters={
         'max_features': [0.6,0.7,0.8]
     },
     'Random Forest':{
-        'n_estimators': [50,100,150],
-        'criterion': ['squared_error','friedman_mse','absolute_error','poisson'],
+        'n_estimators': [5,10,20],
+        'criterion': ['squared_error','friedman_mse','absolute_error'],
         'max_depth': [3,5,7],
         'max_features': [0.4,0.5,0.6],
         'ccp_alpha': [0.0,0.001,0.01]
