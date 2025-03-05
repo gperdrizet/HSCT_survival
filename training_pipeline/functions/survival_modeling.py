@@ -3,10 +3,12 @@
 import pickle
 from typing import Tuple
 
+import numpy as np
 import pandas as pd
 from lifelines import CoxPHFitter, WeibullAFTFitter
 
 from .. import configuration as config
+
 
 def run() -> dict:
     '''Main function to run survival modeling.'''
@@ -56,7 +58,7 @@ def coxph_model(data:dict, assets:dict) -> Tuple[dict, dict]:
     survival_functions=cph_model.predict_survival_function(significant_features_df)
     partial_hazards=cph_model.predict_partial_hazard(significant_features_df)
     data['features']['coxph_survival']=survival_functions.iloc[-1]
-    data['features']['coxph_partial_hazard']=partial_hazards
+    data['features']['coxph_partial_hazard']=np.log(partial_hazards)
 
     return data, assets
 
@@ -90,6 +92,6 @@ def waft_model(data:dict, assets:dict) -> Tuple[dict, dict]:
     survival_functions=waft_model.predict_survival_function(significant_features_df)
     expectations=waft_model.predict_expectation(significant_features_df)
     data['features']['weibullaft_survival']=survival_functions.iloc[-1]
-    data['features']['weibullaft_expectation']=expectations
+    data['features']['weibullaft_expectation']=np.log(expectations)
 
     return data, assets

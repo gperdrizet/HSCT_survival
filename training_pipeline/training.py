@@ -8,6 +8,7 @@ import training_pipeline.configuration as config
 from training_pipeline.functions import data_cleaning
 from training_pipeline.functions import data_encoding
 from training_pipeline.functions import survival_modeling
+from training_pipeline.functions import kld_scoring
 
 class DataCleaning(luigi.Task):
 
@@ -42,7 +43,7 @@ class SurvivalFeatures(luigi.Task):
         return DataEncoding()
     
     def output(self):
-        return luigi.LocalTarget(config.SURVIVAL_FEATURES_RESULTS, format=Nop)
+        return luigi.LocalTarget(config.SURVIVAL_FEATURES_RESULT, format=Nop)
 
     def run(self):
         data=survival_modeling.run()
@@ -51,19 +52,19 @@ class SurvivalFeatures(luigi.Task):
             pickle.dump(data, output_file)
 
 
-# class KLDFeatures(luigi.Task):
+class KLDFeatures(luigi.Task):
 
-#     def requires(self):
-#         return SurvivalFeatures()
+    def requires(self):
+        return SurvivalFeatures()
     
-#     def output(self):
-#         return luigi.LocalTarget(config.TFIDF_LUT, format = Nop)
+    def output(self):
+        return luigi.LocalTarget(config.KLD_FEATURES_RESULT, format=Nop)
 
-#     def run(self):
-#         tfidf_lut = data_funcs.make_tfidf_lut()
+    def run(self):
+        data=kld_scoring.run()
 
-#         with self.output().open('w') as output_file:
-#             dump(tfidf_lut, output_file, protocol = 5)
+        with self.output().open('w') as output_file:
+            pickle.dump(data, output_file)
 
 
 # class ClassifierTraining(luigi.Task):
@@ -103,7 +104,7 @@ def run():
             DataCleaning(),
             DataEncoding(),
             SurvivalFeatures(),
-            # KLDFeatures(),
+            KLDFeatures(),
             # ClassifierTraining(),
             # RegressorTraining()
         ],
