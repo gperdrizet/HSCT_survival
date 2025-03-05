@@ -9,9 +9,12 @@
 '''
 
 import pickle
+from typing import Callable
+import multiprocessing as mp
+
+import numpy as np
 import pandas as pd
 from xgboost import DMatrix
-from typing import Callable
 
 
 def run(
@@ -58,21 +61,30 @@ def run(
         coxph_model=coxph_model
     )
 
+    print(f' CoxPH features added, nan count: {data_df.isnull().sum().sum()}')
+
     data_df=weibull_aft(
         data_df=data_df,
         waft_features=waft_features,
         waft_model=waft_model
     )
 
+    print(f' Weibul AFT features added, nan count: {data_df.isnull().sum().sum()}')
+
     data_df=kullback_leibler_score(
         data_df=data_df,
         kld_models=kld_models
     )
 
+    print(f' Kullback-Leibler divergence scores added, nan count: {data_df.isnull().sum().sum()}')
+
     data_df=learned_efs(
         data_df=data_df,
         efs_model=efs_model
     )
+
+    print(f' Learned EFS probability added, nan count: {data_df.isnull().sum().sum()}')
+    print()
 
     return data_df
 
@@ -116,8 +128,15 @@ def kullback_leibler_score(
 
     '''Adds Kullback-Leibler divergence scores for Cox PH and Weibull AFT features'''
 
-    for feature, model in kld_models.items():
-        data_df[f'{feature} KLD']=model(data_df[feature])
+    for feature, kernel_density_estimate in kld_models.items():
+
+        data=np.array(data_df[feature])
+        workers=mp.cpu_count() - 4
+
+        with mp.Pool(workers) as p:
+            kld_score=np.concatenate(p.map(kernel_density_estimate, np.array_split(data, workers)))
+
+        data_df[f'{feature} KLD']=kld_score
 
     return data_df
 
@@ -128,6 +147,7 @@ def learned_efs(
 ) -> pd.DataFrame:
 
     '''Adds learned EFS probability feature.'''
+
     dfeatures=DMatrix(data_df)
 
     data_df['learned_efs']=efs_model.predict(dfeatures)
