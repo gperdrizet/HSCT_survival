@@ -36,8 +36,8 @@ def run() -> list:
     # Define models
     models={
         # 'SGD':SGDRegressor(penalty='elasticnet', max_iter=10000),
-        'CatBoost':CatBoostRegressor(thread_count=4, verbose=0),
-        'XGBoost':XGBRegressor(n_jobs=4)
+        'CatBoost':CatBoostRegressor(thread_count=1, verbose=0),
+        'XGBoost':XGBRegressor(n_jobs=1)
     }
 
     # Set hyperparameters
@@ -57,7 +57,7 @@ def run() -> list:
 
         bagging_model=BaggingRegressor(
             estimator=model,
-            n_estimators=20,
+            n_estimators=4,
             max_samples=0.8,
             max_features=0.8,
             bootstrap=True,
