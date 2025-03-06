@@ -26,8 +26,8 @@ def run() -> dict:
     # Define models
     models={
         'AdaBoost':AdaBoostClassifier(),
-        'CatBoost':CatBoostClassifier(thread_count=4, verbose=0),
-        'XGBoost':XGBClassifier(n_jobs=4)
+        'CatBoost':CatBoostClassifier(thread_count=1, verbose=0),
+        'XGBoost':XGBClassifier(n_jobs=1)
     }
 
     # Set hyperparameters
