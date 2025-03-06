@@ -47,7 +47,7 @@ def run() -> dict:
 
         calibrated_model=CalibratedClassifierCV(
             model,
-            cv=3,
+            cv=16,
             n_jobs=-1)
 
         calibrated_model.fit(features_df, labels_df['efs'])
